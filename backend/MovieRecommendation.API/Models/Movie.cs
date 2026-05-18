@@ -13,5 +13,12 @@ namespace MovieRecommendation.API.Models
 
         public double? AverageRating { get; set; }
         public int RatingCount { get; set; }
+        public string? PosterUrl { get; set; }
+
+        public string? Overview { get; set; }
+
+        public string? ReleaseDate { get; set; }
+
+        public double? VoteAverage { get; set; }
     }
 }

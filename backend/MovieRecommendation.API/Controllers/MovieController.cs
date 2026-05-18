@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MovieRecommendation.API.Data;
+using MovieRecommendation.API.Services;
 
 namespace MovieRecommendation.API.Controllers
 {
@@ -8,10 +9,13 @@ namespace MovieRecommendation.API.Controllers
     public class MovieController : ControllerBase
     {
         private readonly AppDbContext _context;
-
-        public MovieController(AppDbContext context)
+        private readonly TmdbService _tmdbService;
+        public MovieController(
+            AppDbContext context,
+            TmdbService tmdbService)
         {
             _context = context;
+            _tmdbService = tmdbService;
         }
 
         //Film listeleme
@@ -44,6 +48,26 @@ namespace MovieRecommendation.API.Controllers
             }
 
             return Ok(movie);
+        }
+        [HttpGet("{id}/details")]
+        public async Task<IActionResult> GetMovieDetails(int id)
+        {
+            var movie = _context.Movies.FirstOrDefault(x => x.Id == id);
+
+            if (movie == null)
+            {
+                return NotFound("Film bulunamadı.");
+            }
+
+            if (string.IsNullOrEmpty(movie.TmdbId))
+            {
+                return BadRequest("TMDB ID bulunamadı.");
+            }
+
+            var details = await _tmdbService
+                .GetMovieDetails(int.Parse(movie.TmdbId));
+
+            return Ok(details);
         }
     }
 }

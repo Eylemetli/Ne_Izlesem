@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MovieRecommendation.API.Data;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using MovieRecommendation.API.DTOs;
 
 namespace MovieRecommendation.API.Controllers
 {
@@ -63,7 +64,20 @@ namespace MovieRecommendation.API.Controllers
                 .Take(10)
                 .ToList();
 
-            return Ok(recommendations);
+            var response = recommendations
+            .Select(x => new MovieCardDto
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Genres = x.Genres,
+                PosterUrl = x.PosterUrl,
+                VoteAverage = x.VoteAverage,
+                Overview = x.Overview,
+                ReleaseDate = x.ReleaseDate
+            })
+            .ToList();
+
+            return Ok(response);
         }
         //“Bunu beğenenler şunları da beğendi” mantığıyla öneri üretir.
         [HttpGet("collaborative/{movieId}")]
@@ -109,7 +123,20 @@ namespace MovieRecommendation.API.Controllers
                 .Where(x => recommendedMovieLensIds.Contains(x.MovieLensId))
                 .ToList();
 
-            return Ok(recommendations);
+            var response = recommendations
+            .Select(x => new MovieCardDto
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Genres = x.Genres,
+                PosterUrl = x.PosterUrl,
+                VoteAverage = x.VoteAverage,
+                Overview = x.Overview,
+                ReleaseDate = x.ReleaseDate
+            })
+           .ToList();
+
+            return Ok(response);
         }
         /*Bu filmlerin türlerine göre content-based öneri üretir.
         Aynı zamanda MovieLens verisine göre collaborative öneri üretir.*/
@@ -190,7 +217,20 @@ namespace MovieRecommendation.API.Controllers
                 .Take(10)
                 .ToList();
 
-            return Ok(hybridMovies);
+            var response = hybridMovies
+           .Select(x => new MovieCardDto
+           {
+               Id = x.Id,
+               Title = x.Title,
+               Genres = x.Genres,
+               PosterUrl = x.PosterUrl,
+               VoteAverage = x.VoteAverage,
+               Overview = x.Overview,
+               ReleaseDate = x.ReleaseDate
+           })
+          .ToList();
+
+            return Ok(response);
         }
         [Authorize]
         [HttpGet("me")]
@@ -211,6 +251,27 @@ namespace MovieRecommendation.API.Controllers
 
             if (!likedRatings.Any())
             {
+                var profile = _context.UserProfiles
+                    .FirstOrDefault(x => x.UserId == userId);
+
+                if (profile != null &&
+                    !string.IsNullOrEmpty(profile.FavoriteGenres))
+                {
+                    var favoriteGenres = profile.FavoriteGenres
+                        .Split('|')
+                        .ToList();
+
+                    var genreRecommendations = _context.Movies
+                        .AsEnumerable()
+                        .Where(x => !string.IsNullOrEmpty(x.Genres) &&
+                                    x.Genres.Split('|')
+                                    .Any(g => favoriteGenres.Contains(g)))
+                        .Take(10)
+                        .ToList();
+
+                    return Ok(genreRecommendations);
+                }
+
                 var popularMovies = _context.Movies
                     .OrderByDescending(x => x.AverageRating ?? 0)
                     .ThenByDescending(x => x.RatingCount)
@@ -240,7 +301,20 @@ namespace MovieRecommendation.API.Controllers
                 .Take(10)
                 .ToList();
 
-            return Ok(recommendations);
+            var response = recommendations
+            .Select(x => new MovieCardDto
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Genres = x.Genres,
+                PosterUrl = x.PosterUrl,
+                VoteAverage = x.VoteAverage,
+                Overview = x.Overview,
+                ReleaseDate = x.ReleaseDate
+            })
+           .ToList();
+
+            return Ok(response);
         }
     }
 }

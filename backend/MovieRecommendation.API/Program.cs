@@ -69,6 +69,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddHttpClient<TmdbService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -106,6 +108,10 @@ app.MapGet("/weatherforecast", () =>
 using (var scope = app.Services.CreateScope())
 {
     var seedService = scope.ServiceProvider.GetRequiredService<SeedService>();
+    var tmdbService = scope.ServiceProvider
+        .GetRequiredService<TmdbService>();
+
+    await seedService.SyncTmdbData(tmdbService);
 
     seedService.SeedMovies();
     seedService.SeedRatings();
