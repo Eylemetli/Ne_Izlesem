@@ -83,5 +83,39 @@ namespace MovieRecommendation.API.Controllers
 
             return Ok(details);
         }
+        [HttpGet("filter")]
+        public IActionResult FilterMovies(string? genre, double? minRating)
+        {
+            var query = _context.Movies
+                .AsNoTracking()
+                .Where(x => x.PosterUrl != null)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(genre))
+            {
+                query = query.Where(x => x.Genres != null && x.Genres.Contains(genre));
+            }
+
+            if (minRating.HasValue)
+            {
+                query = query.Where(x => x.VoteAverage >= minRating.Value);
+            }
+
+            var movies = query
+                .OrderByDescending(x => x.VoteAverage)
+                .Take(20)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Title,
+                    x.Genres,
+                    x.PosterUrl,
+                    x.VoteAverage,
+                    x.Overview
+                })
+                .ToList();
+
+            return Ok(movies);
+        }
     }
 }
