@@ -14,5 +14,6 @@ namespace MovieRecommendation.API.Data
         public DbSet<Movie> Movies { get; set; }
         public DbSet<UserRating> UserRatings { get; set; }
         public DbSet<MovieLensRating> MovieLensRatings { get; set; }
+        public DbSet<WatchlistItem> WatchlistItems { get; set; }
     }
 }

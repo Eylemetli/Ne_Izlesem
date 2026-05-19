@@ -12,6 +12,6 @@ namespace MovieRecommendation.API.Models
         public string? WatchingPurpose { get; set; }
 
         // Navigation
-        public User User { get; set; }
+        public User? User { get; set; }
     }
 }

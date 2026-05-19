@@ -45,7 +45,24 @@ namespace MovieRecommendation.API.Controllers
         public IActionResult SearchMovies(string query)
         {
             var movies = _context.Movies
-                .Where(x => x.Title.Contains(query))
+                .AsNoTracking()
+                .Where(x => x.PosterUrl != null)
+                .Where(x => x.Title.ToLower().Contains(query.ToLower()))
+                .OrderBy(x => x.Title)
+                .Take(50)
+                .ToList()
+                .GroupBy(x => x.Title)
+                .Select(g => g.First())
+                .Take(20)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Title,
+                    x.Genres,
+                    x.PosterUrl,
+                    x.VoteAverage,
+                    x.Overview
+                })
                 .ToList();
 
             return Ok(movies);

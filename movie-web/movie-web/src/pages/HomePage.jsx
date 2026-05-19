@@ -6,6 +6,7 @@ function HomePage() {
     const [movies, setMovies] = useState([])
     const [genre, setGenre] = useState("")
     const [minRating, setMinRating] = useState("")
+    const [searchText, setSearchText] = useState("")
 
     const fetchRecommendations = async () => {
         try {
@@ -35,11 +36,36 @@ function HomePage() {
         }
     }
 
+    const handleSearch = async () => {
+        try {
+            const response = await api.get("/Movie/search", {
+                params: {
+                    query: searchText
+                }
+            })
+
+            setMovies(response.data)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     return (
         <div>
             <h1>Home Page</h1>
 
             <div style={{ padding: "20px" }}>
+                <input
+                    type="text"
+                    placeholder="Film ara..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                />
+
+                <button onClick={handleSearch}>
+                    Ara
+                </button>
+
                 <select
                     value={genre}
                     onChange={(e) => setGenre(e.target.value)}
