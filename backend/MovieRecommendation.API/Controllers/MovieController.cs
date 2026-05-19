@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MovieRecommendation.API.Data;
 using MovieRecommendation.API.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace MovieRecommendation.API.Controllers
 {
@@ -22,7 +23,20 @@ namespace MovieRecommendation.API.Controllers
         [HttpGet]
         public IActionResult GetAllMovies()
         {
-            var movies = _context.Movies.ToList();
+            var movies = _context.Movies
+        .AsNoTracking()
+        .Where(x => x.PosterUrl != null)
+        .OrderBy(x => x.Id)
+        .Take(20)
+        .Select(x => new
+        {
+            x.Id,
+            x.Title,
+            x.Genres,
+            x.PosterUrl,
+            x.VoteAverage
+        })
+        .ToList();
 
             return Ok(movies);
         }

@@ -71,6 +71,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddHttpClient<TmdbService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ReactPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -81,6 +91,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("ReactPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -111,10 +122,10 @@ using (var scope = app.Services.CreateScope())
     var tmdbService = scope.ServiceProvider
         .GetRequiredService<TmdbService>();
 
-    await seedService.SyncTmdbData(tmdbService);
+    //await seedService.SyncTmdbData(tmdbService);
 
-    seedService.SeedMovies();
-    seedService.SeedRatings();
+    //seedService.SeedMovies();
+    //seedService.SeedRatings();
 }
 
 app.Run();
