@@ -7,13 +7,25 @@ function HomePage() {
     const [genre, setGenre] = useState("")
     const [minRating, setMinRating] = useState("")
     const [searchText, setSearchText] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const fetchRecommendations = async () => {
+
         try {
+
+            setLoading(true)
+
             const response = await api.get("/Recommendation/me")
+
             setMovies(response.data)
+
         } catch (error) {
+
             console.log(error)
+
+        } finally {
+
+            setLoading(false)
         }
     }
 
@@ -23,6 +35,7 @@ function HomePage() {
 
     const handleFilter = async () => {
         try {
+            setLoading(true)
             const response = await api.get("/Movie/filter", {
                 params: {
                     genre: genre,
@@ -31,13 +44,18 @@ function HomePage() {
             })
 
             setMovies(response.data)
+
         } catch (error) {
             console.log(error)
+        }
+        finally {
+            setLoading(false)
         }
     }
 
     const handleSearch = async () => {
         try {
+            setLoading(true)
             const response = await api.get("/Movie/search", {
                 params: {
                     query: searchText
@@ -47,6 +65,9 @@ function HomePage() {
             setMovies(response.data)
         } catch (error) {
             console.log(error)
+        }
+        finally {
+            setLoading(false)
         }
     }
 
@@ -99,6 +120,8 @@ function HomePage() {
                     Önerilere Dön
                 </button>
             </div>
+
+            {loading && <h2>Loading...</h2>}
 
             <div
                 style={{
