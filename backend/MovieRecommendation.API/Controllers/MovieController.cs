@@ -81,24 +81,30 @@ namespace MovieRecommendation.API.Controllers
             return Ok(movie);
         }
         [HttpGet("{id}/details")]
-        public async Task<IActionResult> GetMovieDetails(int id)
+        public IActionResult GetMovieDetails(int id)
         {
-            var movie = _context.Movies.FirstOrDefault(x => x.Id == id);
+            var movie = _context.Movies
+                .AsNoTracking()
+                .Where(x => x.Id == id)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Title,
+                    x.Genres,
+                    x.PosterUrl,
+                    FullPosterUrl = x.PosterUrl,
+                    x.Overview,
+                    x.ReleaseDate,
+                    x.VoteAverage
+                })
+                .FirstOrDefault();
 
             if (movie == null)
             {
                 return NotFound("Film bulunamadı.");
             }
 
-            if (string.IsNullOrEmpty(movie.TmdbId))
-            {
-                return BadRequest("TMDB ID bulunamadı.");
-            }
-
-            var details = await _tmdbService
-                .GetMovieDetails(int.Parse(movie.TmdbId));
-
-            return Ok(details);
+            return Ok(movie);
         }
         [HttpGet("filter")]
         public IActionResult FilterMovies(string? genre, double? minRating)
@@ -133,6 +139,38 @@ namespace MovieRecommendation.API.Controllers
                 .ToList();
 
             return Ok(movies);
+        }
+        [HttpGet("{id}/similar")]
+        public IActionResult GetSimilarMovies(int id)
+        {
+            var movie = _context.Movies.FirstOrDefault(x => x.Id == id);
+
+            if (movie == null)
+            {
+                return NotFound();
+            }
+
+            var genres = movie.Genres?.Split('|');
+
+            var similarMovies = _context.Movies
+                .AsNoTracking()
+                .Where(x => x.Id != id)
+                .Where(x => x.PosterUrl != null)
+                .Where(x => genres!.Any(g => x.Genres!.Contains(g)))
+                .OrderByDescending(x => x.VoteAverage)
+                .Take(10)
+                .Select(x => new
+                {
+                    x.Id,
+                    x.Title,
+                    x.Genres,
+                    x.PosterUrl,
+                    x.VoteAverage,
+                    x.Overview
+                })
+                .ToList();
+
+            return Ok(similarMovies);
         }
     }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import api from "../services/api"
+import MovieCard from "../components/MovieCard"
 
 function MovieDetailsPage() {
 
@@ -9,6 +10,7 @@ function MovieDetailsPage() {
     const [movie, setMovie] = useState(null)
     const [rating, setRating] = useState(5)
     const [message, setMessage] = useState("")
+    const [similarMovies, setSimilarMovies] = useState([])
 
     useEffect(() => {
 
@@ -19,6 +21,9 @@ function MovieDetailsPage() {
                 const response = await api.get(`/Movie/${id}/details`)
 
                 setMovie(response.data)
+                const similarResponse = await api.get(`/Movie/${id}/similar`)
+
+                setSimilarMovies(similarResponse.data)
 
             } catch (error) {
                 console.log(error)
@@ -44,6 +49,24 @@ function MovieDetailsPage() {
             console.log(error)
 
             setMessage("Hata oluştu.")
+        }
+    }
+
+    const addToWatchlist = async () => {
+
+        try {
+
+            await api.post(
+                `/Watchlist?userId=${localStorage.getItem("userId")}&movieId=${id}`, null
+            )
+
+            alert("Watchliste eklendi.")
+
+        } catch (error) {
+
+            console.log(error)
+
+            alert("Film zaten kayıtlı olabilir.")
         }
     }
 
@@ -86,9 +109,25 @@ function MovieDetailsPage() {
                 <button onClick={submitRating}>
                     Puan Ver
                 </button>
+                <button onClick={addToWatchlist}>
+                    Watchliste Ekle
+                </button>
 
                 <p>{message}</p>
 
+            </div>
+            <h2>Benzer Filmler</h2>
+
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                    gap: "20px"
+                }}
+            >
+                {similarMovies.map((movie) => (
+                    <MovieCard key={movie.id} movie={movie} />
+                ))}
             </div>
 
         </div>

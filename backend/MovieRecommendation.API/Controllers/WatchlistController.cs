@@ -60,5 +60,21 @@ namespace MovieRecommendation.API.Controllers
 
             return Ok(movies);
         }
+        [HttpDelete]
+        public IActionResult RemoveFromWatchlist(int userId, int movieId)
+        {
+            var item = _context.WatchlistItems
+                .FirstOrDefault(x => x.UserId == userId && x.MovieId == movieId);
+
+            if (item == null)
+            {
+                return NotFound("Film watchlistte bulunamadı.");
+            }
+
+            _context.WatchlistItems.Remove(item);
+            _context.SaveChanges();
+
+            return Ok("Film watchlistten kaldırıldı.");
+        }
     }
 }

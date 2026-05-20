@@ -49,7 +49,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<SeedService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions => sqlOptions.CommandTimeout(60)));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions => sqlOptions.CommandTimeout(180)));
 
 builder.Services.AddScoped<JwtService>();
 

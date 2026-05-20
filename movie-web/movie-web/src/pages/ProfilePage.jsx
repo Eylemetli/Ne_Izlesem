@@ -11,6 +11,7 @@ function ProfilePage() {
     })
 
     const [message, setMessage] = useState("")
+    const [watchlist, setWatchlist] = useState([])
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -28,8 +29,24 @@ function ProfilePage() {
                 console.log(error)
             }
         }
+        const fetchWatchlist = async () => {
+
+            try {
+
+                const response = await api.get(
+                    `/Watchlist/${localStorage.getItem("userId")}`
+                )
+
+                setWatchlist(response.data)
+
+            } catch (error) {
+
+                console.log(error)
+            }
+        }
 
         fetchProfile()
+        fetchWatchlist()
     }, [])
 
     const handleChange = (e) => {
@@ -49,6 +66,17 @@ function ProfilePage() {
         } catch (error) {
             console.log(error)
             setMessage("Profil güncellenemedi.")
+        }
+    }
+    const removeFromWatchlist = async (movieId) => {
+        try {
+            await api.delete(
+                `/Watchlist?userId=${localStorage.getItem("userId")}&movieId=${movieId}`
+            )
+
+            setWatchlist(watchlist.filter((movie) => movie.id !== movieId))
+        } catch (error) {
+            console.log(error)
         }
     }
 
@@ -94,6 +122,36 @@ function ProfilePage() {
 
                 <button type="submit">Profili Güncelle</button>
             </form>
+            <h2>Watchlist</h2>
+
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                    gap: "20px"
+                }}
+            >
+                {watchlist.map((movie) => (
+
+                    <div key={movie.id}>
+
+                        <img
+                            src={movie.posterUrl}
+                            alt={movie.title}
+                            style={{
+                                width: "100%",
+                                borderRadius: "10px"
+                            }}
+                        />
+
+                        <h3>{movie.title}</h3>
+                        <button onClick={() => removeFromWatchlist(movie.id)}>
+                            Kaldır
+                        </button>
+
+                    </div>
+                ))}
+            </div>
 
             <p>{message}</p>
         </div>
