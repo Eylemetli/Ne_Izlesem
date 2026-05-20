@@ -44,15 +44,17 @@ namespace MovieRecommendation.API.Controllers
         [HttpGet("search")]
         public IActionResult SearchMovies(string query)
         {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return Ok(new List<object>());
+            }
+
+            var search = query.Trim().ToLower();
+
             var movies = _context.Movies
                 .AsNoTracking()
-                .Where(x => x.PosterUrl != null)
-                .Where(x => x.Title.ToLower().Contains(query.ToLower()))
+                .Where(x => x.Title.ToLower().Contains(search))
                 .OrderBy(x => x.Title)
-                .Take(50)
-                .ToList()
-                .GroupBy(x => x.Title)
-                .Select(g => g.First())
                 .Take(20)
                 .Select(x => new
                 {
