@@ -3,7 +3,7 @@ function MovieCard({ movie }) {
     return (
         <Link
             to={`/movie/${movie.id}`}
-            style={{ textDecoration: "none", color: "black" }}
+            style={{ textDecoration: "none", color: "white" }}
         >
             <div
                 onMouseEnter={(e) => {
@@ -14,11 +14,12 @@ function MovieCard({ movie }) {
                     e.currentTarget.style.transform = "scale(1)"
                 }}
                 style={{
-                    border: "1px solid #ccc",
-                    borderRadius: "10px",
-                    padding: "10px",
+                    backgroundColor: "#1e1e1e",
+                    borderRadius: "12px",
+                    overflow: "hidden",
                     transition: "0.3s",
-                    cursor: "pointer"
+                    cursor: "pointer",
+                    boxShadow: "0 4px 10px rgba(0,0,0,0.4)"
                 }}
             >
                 {movie.posterUrl ? (
@@ -27,7 +28,7 @@ function MovieCard({ movie }) {
                         alt={movie.title}
                         style={{
                             width: "100%",
-                            height: "350px",
+                            height: "330px",
                             objectFit: "contain",
                             backgroundColor: "#111",
                             borderRadius: "10px"
@@ -49,14 +50,25 @@ function MovieCard({ movie }) {
                     </div>
                 )}
 
-                <h3>{movie.title}</h3>
+                <div style={{ padding: "15px" }}>
 
-                <p>{movie.genres}</p>
-                <p>
-                    {movie.overview?.slice(0, 100)}...
-                </p>
+                    <h3
+                        style={{
+                            marginTop: 0
+                        }}
+                    >
+                        {movie.title}
+                    </h3>
 
-                <p>⭐ {movie.voteAverage}</p>
+                    <p>{movie.genres}</p>
+
+                    <p>
+                        {movie.overview?.slice(0, 100)}...
+                    </p>
+
+                    <p>⭐ {movie.voteAverage}</p>
+
+                </div>
             </div>
         </Link>
     )

@@ -75,25 +75,68 @@ function MovieDetailsPage() {
     }
 
     return (
-        <div style={{ padding: "20px" }}>
+        <div
+            style={{
+                padding: "40px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "30px"
+            }}
+        >
 
-            <img
-                src={movie.fullPosterUrl}
-                alt={movie.title}
+            <div
                 style={{
-                    width: "300px",
-                    borderRadius: "10px"
+                    display: "flex",
+                    gap: "40px",
+                    alignItems: "flex-start"
                 }}
-            />
+            >
 
-            <h1>{movie.title}</h1>
+                <img
+                    src={movie.fullPosterUrl}
+                    alt={movie.title}
+                    style={{
+                        width: "300px",
+                        borderRadius: "12px"
+                    }}
+                />
 
-            <p>{movie.overview}</p>
+                <div>
 
-            <p>⭐ {movie.vote_average}</p>
+                    <h1
+                        style={{
+                            fontSize: "48px",
+                            marginTop: 0
+                        }}
+                    >
+                        {movie.title}
+                    </h1>
+
+                    <p
+                        style={{
+                            maxWidth: "700px",
+                            lineHeight: "1.8"
+                        }}
+                    >
+                        {movie.overview}
+                    </p>
+
+                    <p>⭐ {movie.voteAverage}</p>
+
+                    <p>{movie.releaseDate}</p>
+
+                </div>
+
+            </div>
 
             <p>{movie.release_date}</p>
-            <div>
+            <div
+                style={{
+                    display: "flex",
+                    gap: "10px",
+                    alignItems: "center"
+                }}
+            >
 
                 <select
                     value={rating}

@@ -73,8 +73,41 @@ function HomePage() {
 
     return (
         <div>
-            <h1>Home Page</h1>
+            <div
+                style={{
+                    height: "350px",
+                    backgroundImage:
+                        "url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070')",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    padding: "40px"
+                }}
+            >
+                <h1
+                    style={{
+                        fontSize: "60px",
+                        margin: 0
+                    }}
+                >
+                    Movie Recommendation System
+                </h1>
 
+                <p
+                    style={{
+                        fontSize: "20px",
+                        maxWidth: "600px"
+                    }}
+                >
+                    Personalized movie recommendations powered by AI and user preferences.
+                </p>
+            </div>
+
+            <h2 style={{ paddingLeft: "20px" }}>
+                Recommended Movies
+            </h2>
             <div style={{ padding: "20px" }}>
                 <input
                     type="text"
