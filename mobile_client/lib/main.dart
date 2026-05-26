@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'pages/home_page.dart';
+import 'pages/login_page.dart';
 
 void main() {
   runApp(const MovieApp());
@@ -13,27 +15,8 @@ class MovieApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Movie Recommendation',
       theme: ThemeData.dark(),
-      home: const HomePage(),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Movie Recommendation"),
-        centerTitle: true,
-      ),
-      body: const Center(
-        child: Text(
-          "Flutter Mobile App Started 🚀",
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
+      initialRoute: '/',
+      routes: {'/': (context) => const LoginPage()},
     );
   }
 }
