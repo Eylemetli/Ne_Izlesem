@@ -32,32 +32,30 @@ function LoginPage() {
     }
 
     return (
-        <div>
-            <h1>Login</h1>
+        <div className="auth-page">
+            <div className="auth-card">
+                <h1>Login</h1>
 
-            <form onSubmit={handleLogin}>
-                <div>
+                <form onSubmit={handleLogin}>
                     <input
                         type="email"
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
-                </div>
 
-                <div>
                     <input
                         type="password"
                         placeholder="Şifre"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                </div>
 
-                <button type="submit">Giriş Yap</button>
-            </form>
+                    <button type="submit">Giriş Yap</button>
+                </form>
 
-            <p>{message}</p>
+                <p>{message}</p>
+            </div>
         </div>
     )
 }

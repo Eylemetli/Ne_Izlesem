@@ -41,3 +41,83 @@ nav {
     gap: 20px;
     align-items: center;
 }
+
+.auth-page {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-card {
+    width: 380px;
+    background-color: #1e1e1e;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.auth-card h1 {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.auth-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.auth-card input {
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.auth-card button {
+    width: 100%;
+}
+
+.profile-page {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.profile-card {
+    width: 520px;
+    background-color: #1e1e1e;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+}
+
+.profile-card h1 {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    margin-bottom: 6px;
+    font-weight: bold;
+    color: #ddd;
+}
+
+.form-group small {
+    margin-top: 5px;
+    color: #aaa;
+    font-size: 12px;
+}
+
+.form-group input {
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+}

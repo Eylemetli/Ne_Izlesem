@@ -81,79 +81,97 @@ function ProfilePage() {
     }
 
     return (
-        <div>
-            <h1>Profile</h1>
+        <div className="profile-page">
+            <div className="profile-card">
+                <h1>Profile</h1>
 
-            <form onSubmit={handleSubmit}>
-                <input
-                    name="fullName"
-                    placeholder="Ad Soyad"
-                    value={profile.fullName}
-                    onChange={handleChange}
-                />
-
-                <input
-                    name="favoriteGenres"
-                    placeholder="Favorite Genres örn: Comedy|Action"
-                    value={profile.favoriteGenres}
-                    onChange={handleChange}
-                />
-
-                <input
-                    name="languagePreference"
-                    placeholder="Language Preference"
-                    value={profile.languagePreference}
-                    onChange={handleChange}
-                />
-
-                <input
-                    name="localOrForeign"
-                    placeholder="Local or Foreign"
-                    value={profile.localOrForeign}
-                    onChange={handleChange}
-                />
-
-                <input
-                    name="watchingPurpose"
-                    placeholder="Watching Purpose"
-                    value={profile.watchingPurpose}
-                    onChange={handleChange}
-                />
-
-                <button type="submit">Profili Güncelle</button>
-            </form>
-            <h2>Watchlist</h2>
-
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                    gap: "20px"
-                }}
-            >
-                {watchlist.map((movie) => (
-
-                    <div key={movie.id}>
-
-                        <img
-                            src={movie.posterUrl}
-                            alt={movie.title}
-                            style={{
-                                width: "100%",
-                                borderRadius: "10px"
-                            }}
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Ad Soyad</label>
+                        <input
+                            name="fullName"
+                            placeholder="Örn: Eylem Fidan"
+                            value={profile.fullName}
+                            onChange={handleChange}
                         />
-
-                        <h3>{movie.title}</h3>
-                        <button onClick={() => removeFromWatchlist(movie.id)}>
-                            Kaldır
-                        </button>
-
                     </div>
-                ))}
-            </div>
 
-            <p>{message}</p>
+                    <div className="form-group">
+                        <label>Favori Türler</label>
+                        <input
+                            name="favoriteGenres"
+                            placeholder="Örn: Comedy|Action|Drama"
+                            value={profile.favoriteGenres}
+                            onChange={handleChange}
+                        />
+                        <small>Türleri | işaretiyle ayır. Örn: Comedy|Action</small>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Dil Tercihi</label>
+                        <input
+                            name="languagePreference"
+                            placeholder="Örn: English, Turkish"
+                            value={profile.languagePreference}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Yerli / Yabancı Tercihi</label>
+                        <input
+                            name="localOrForeign"
+                            placeholder="Örn: Foreign veya Local"
+                            value={profile.localOrForeign}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>İzleme Amacı</label>
+                        <input
+                            name="watchingPurpose"
+                            placeholder="Örn: Entertainment, Learning"
+                            value={profile.watchingPurpose}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <button type="submit">Profili Güncelle</button>
+                </form>
+                <h2>Watchlist</h2>
+
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                        gap: "20px"
+                    }}
+                >
+                    {watchlist.map((movie) => (
+
+                        <div key={movie.id}>
+
+                            <img
+                                src={movie.posterUrl}
+                                alt={movie.title}
+                                style={{
+                                    width: "100%",
+                                    borderRadius: "10px"
+                                }}
+                            />
+
+                            <h3>{movie.title}</h3>
+                            <button onClick={() => removeFromWatchlist(movie.id)}>
+                                Kaldır
+                            </button>
+
+                        </div>
+                    ))}
+                </div>
+
+                <p>{message}</p>
+            </div>
         </div>
     )
 }

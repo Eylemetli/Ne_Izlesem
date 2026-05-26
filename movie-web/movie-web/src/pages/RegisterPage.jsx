@@ -29,35 +29,37 @@ function RegisterPage() {
     }
 
     return (
-        <div>
-            <h1>Register</h1>
+        <div className="auth-page">
+            <div className="auth-card">
+                <h1>Register</h1>
 
-            <form onSubmit={handleRegister}>
-                <input
-                    type="text"
-                    placeholder="Ad Soyad"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                />
+                <form onSubmit={handleRegister}>
+                    <input
+                        type="text"
+                        placeholder="Ad Soyad"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                    />
 
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
 
-                <input
-                    type="password"
-                    placeholder="Şifre"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                    <input
+                        type="password"
+                        placeholder="Şifre"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
 
-                <button type="submit">Kayıt Ol</button>
-            </form>
+                    <button type="submit">Kayıt Ol</button>
+                </form>
 
-            <p>{message}</p>
+                <p>{message}</p>
+            </div>
         </div>
     )
 }
