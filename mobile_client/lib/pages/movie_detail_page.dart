@@ -52,6 +52,30 @@ class MovieDetailPage extends StatelessWidget {
               },
               child: const Text("Watchliste Ekle"),
             ),
+            const SizedBox(height: 20),
+
+            Row(
+              children: [
+                for (int i = 1; i <= 5; i++)
+                  IconButton(
+                    onPressed: () async {
+                      try {
+                        await ApiService().rateMovie(movie["id"], i.toDouble());
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("$i puan verildi")),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Puan verilemedi")),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.star),
+                    color: Colors.amber,
+                  ),
+              ],
+            ),
 
             const SizedBox(height: 20),
 

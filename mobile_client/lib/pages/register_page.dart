@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'home_page.dart';
-import 'main_navigation_page.dart';
-import 'register_page.dart';
+import 'login_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
+  final fullNameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -19,17 +18,21 @@ class _LoginPageState extends State<LoginPage> {
 
   String message = "";
 
-  Future<void> login() async {
+  Future<void> register() async {
     try {
-      await apiService.login(emailController.text, passwordController.text);
+      await apiService.register(
+        fullName: fullNameController.text,
+        email: emailController.text,
+        password: passwordController.text,
+      );
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const MainNavigationPage()),
+        MaterialPageRoute(builder: (_) => const LoginPage()),
       );
     } catch (e) {
       setState(() {
-        message = "Giriş başarısız.";
+        message = "Kayıt başarısız.";
       });
     }
   }
@@ -43,7 +46,11 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Login", style: TextStyle(fontSize: 32)),
+              const Text("Register", style: TextStyle(fontSize: 32)),
+              TextField(
+                controller: fullNameController,
+                decoration: const InputDecoration(labelText: "Ad Soyad"),
+              ),
               TextField(
                 controller: emailController,
                 decoration: const InputDecoration(labelText: "Email"),
@@ -54,15 +61,9 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true,
               ),
               const SizedBox(height: 20),
-              ElevatedButton(onPressed: login, child: const Text("Giriş Yap")),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterPage()),
-                  );
-                },
-                child: const Text("Hesabın yok mu? Kayıt Ol"),
+              ElevatedButton(
+                onPressed: register,
+                child: const Text("Kayıt Ol"),
               ),
               Text(message),
             ],

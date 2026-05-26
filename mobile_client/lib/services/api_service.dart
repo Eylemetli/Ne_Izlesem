@@ -109,4 +109,69 @@ class ApiService {
       throw Exception("Profil güncellenemedi");
     }
   }
+
+  Future<List<dynamic>> searchMovies(String query) async {
+    if (query.trim().isEmpty) {
+      return [];
+    }
+
+    final encodedQuery = Uri.encodeComponent(query.trim());
+
+    final response = await http.get(
+      Uri.parse("$baseUrl/Movie/search?query=$encodedQuery"),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print("SEARCH STATUS: ${response.statusCode}");
+      print("SEARCH BODY: ${response.body}");
+      return [];
+    }
+  }
+
+  Future<List<dynamic>> filterMovies(String genre, String minRating) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/Movie/filter?genre=$genre&minRating=$minRating"),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Filtreleme başarısız");
+    }
+  }
+
+  Future<void> rateMovie(int movieId, double rating) async {
+    final response = await http.post(
+      Uri.parse(
+        "$baseUrl/Rating?userId=$userId&movieId=$movieId&rating=$rating",
+      ),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Puan verilemedi");
+    }
+  }
+
+  Future<void> register({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/Auth/register"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "fullName": fullName,
+        "email": email,
+        "password": password,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Kayıt başarısız");
+    }
+  }
 }
