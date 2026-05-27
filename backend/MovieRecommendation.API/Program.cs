@@ -81,6 +81,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddHttpClient<MlService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

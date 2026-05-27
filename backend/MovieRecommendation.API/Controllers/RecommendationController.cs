@@ -3,6 +3,7 @@ using MovieRecommendation.API.Data;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using MovieRecommendation.API.DTOs;
+using MovieRecommendation.API.Services;
 
 namespace MovieRecommendation.API.Controllers
 {
@@ -11,10 +12,12 @@ namespace MovieRecommendation.API.Controllers
     public class RecommendationController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly MlService _mlService;
 
-        public RecommendationController(AppDbContext context)
+        public RecommendationController(AppDbContext context, MlService mlService)
         {
             _context = context;
+            _mlService = mlService;
         }
 
         //Ana ekran önerilerini üretir
@@ -234,7 +237,7 @@ namespace MovieRecommendation.API.Controllers
         }
         [Authorize]
         [HttpGet("me")]
-        public IActionResult GetMyRecommendations()
+        public async Task<IActionResult> GetMyRecommendations()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
 
@@ -280,6 +283,54 @@ namespace MovieRecommendation.API.Controllers
 
                 return Ok(popularMovies);
             }
+            // ML servisine kullanıcının puanlarını gönder
+            // ML servisine kullanıcının puanlarını gönder
+            var mlRatings = _context.UserRatings
+                .Where(x => x.UserId == userId)
+                .Join(_context.Movies,
+                      ur => ur.MovieId,
+                      m => m.Id,
+                      (ur, m) => new MlRatingInput
+                      {
+                          MovieLensId = m.MovieLensId,
+                          Rating = ur.Rating
+                      })
+                .Where(x => x.MovieLensId > 0)
+                .ToList();
+
+            if (mlRatings.Any())
+            {
+                var mlResults = await _mlService.GetRecommendationsByRatings(mlRatings);
+
+                if (mlResults.Any())
+                {
+                    Console.WriteLine($"ML sonuç sayısı: {mlResults.Count}");
+                    var tmdbIds = mlResults
+                        .Where(x => x.TmdbId.HasValue)
+                        .Select(x => x.TmdbId!.Value.ToString())
+                        .ToList();
+                    Console.WriteLine($"tmdbIds: {string.Join(",", tmdbIds.Take(3))}");
+
+                    var matchedMovies = _context.Movies
+                        .Where(x => x.TmdbId != null && tmdbIds.Contains(x.TmdbId))
+                        .Select(x => new MovieCardDto
+                        {
+                            Id = x.Id,
+                            Title = x.Title,
+                            Genres = x.Genres,
+                            PosterUrl = x.PosterUrl,
+                            VoteAverage = x.VoteAverage,
+                            Overview = x.Overview,
+                            ReleaseDate = x.ReleaseDate
+                        })
+                        .ToList();
+                    Console.WriteLine($"Eşleşen film sayısı: {matchedMovies.Count}");
+
+                    if (matchedMovies.Any())
+                        return Ok(matchedMovies);
+                }
+            }
+            // ML sonuç vermediyse mevcut mantık devam eder...
 
             var likedMovieIds = likedRatings
                 .Select(x => x.MovieId)

@@ -184,14 +184,16 @@ class _HomePageState extends State<HomePage> {
                   Expanded(
                     child: GridView.builder(
                       itemCount: movies.length,
+                      padding: const EdgeInsets.only(top: 4),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.62,
+                            crossAxisCount: 2, // 3 → 2: daha okunaklı
+                            childAspectRatio: 0.62, // poster oranına uygun
+                            crossAxisSpacing: 4,
+                            mainAxisSpacing: 4,
                           ),
                       itemBuilder: (context, index) {
                         final movie = movies[index];
-
                         return MovieCard(movie: movie);
                       },
                     ),
