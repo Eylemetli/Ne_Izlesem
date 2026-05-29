@@ -8,6 +8,7 @@ class MovieDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ApiService apiService = ApiService();
     return Scaffold(
       appBar: AppBar(title: Text(movie["title"] ?? "Film Detayı")),
       body: SingleChildScrollView(
@@ -39,7 +40,7 @@ class MovieDetailPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await ApiService().addToWatchlist(movie["id"]);
+                  await apiService.addToWatchlist(movie["id"]);
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Watchliste eklendi")),
@@ -60,7 +61,7 @@ class MovieDetailPage extends StatelessWidget {
                   IconButton(
                     onPressed: () async {
                       try {
-                        await ApiService().rateMovie(movie["id"], i.toDouble());
+                        await apiService.rateMovie(movie["id"], i.toDouble());
 
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text("$i puan verildi")),

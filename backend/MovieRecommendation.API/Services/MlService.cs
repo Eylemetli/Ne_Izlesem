@@ -47,24 +47,18 @@ namespace MovieRecommendation.API.Services
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await _http.PostAsync(
                     $"{_baseUrl}/recommend/by-ratings?n={n}", content);
-                Console.WriteLine($"ML Servis cevabı: {response.StatusCode}");
 
                 if (!response.IsSuccessStatusCode) return new();
 
                 var responseBody = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"ML Ham cevap: {responseBody.Substring(0, Math.Min(200, responseBody.Length))}");
 
                 var result = JsonSerializer.Deserialize<MlRecommendationResult>(responseBody,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                Console.WriteLine($"Deserialize sonucu: {result?.Recommendations?.Count ?? -1}");
 
                 return result?.Recommendations ?? new();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ML Servis hatası: {ex.Message}");
-                Console.WriteLine($"Stack: {ex.StackTrace}");
                 return new(); // ML servis çalışmıyorsa boş dön, fallback devreye girer
             }
         }

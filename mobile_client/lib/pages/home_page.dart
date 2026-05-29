@@ -52,17 +52,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> filterMovies() async {
     final data = await apiService.filterMovies(selectedGenre, selectedRating);
-    Future<void> resetMovies() async {
-      setState(() {
-        searchText = "";
-        selectedGenre = "";
-        selectedRating = "";
-        isLoading = true;
-      });
-
-      await fetchMovies();
-    }
-
     setState(() {
       movies = data;
     });

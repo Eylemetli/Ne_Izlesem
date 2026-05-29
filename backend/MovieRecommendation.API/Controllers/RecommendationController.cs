@@ -22,7 +22,7 @@ namespace MovieRecommendation.API.Controllers
 
         //Ana ekran önerilerini üretir
         [HttpGet("home/{userId}")]
-        public IActionResult GetHomeRecommendations(int userId)
+        public async Task<IActionResult> GetHomeRecommendations(int userId)
         {
             var userRatings = _context.UserRatings
                 .Where(x => x.UserId == userId && x.Rating >= 4)
@@ -79,6 +79,48 @@ namespace MovieRecommendation.API.Controllers
                 ReleaseDate = x.ReleaseDate
             })
             .ToList();
+
+            var mlRatings = _context.UserRatings
+    .Where(x => x.UserId == userId)
+    .Join(_context.Movies,
+          ur => ur.MovieId,
+          m => m.Id,
+          (ur, m) => new MlRatingInput
+          {
+              MovieLensId = m.MovieLensId,
+              Rating = ur.Rating
+          })
+    .Where(x => x.MovieLensId > 0)
+    .ToList();
+
+            if (mlRatings.Any())
+            {
+                var mlResults = await _mlService.GetRecommendationsByRatings(mlRatings);
+                if (mlResults.Any())
+                {
+                    var tmdbIds = mlResults
+                        .Where(x => x.TmdbId.HasValue)
+                        .Select(x => x.TmdbId!.Value.ToString())
+                        .ToList();
+
+                    var matchedMovies = _context.Movies
+                        .Where(x => x.TmdbId != null && tmdbIds.Contains(x.TmdbId))
+                        .Select(x => new MovieCardDto
+                        {
+                            Id = x.Id,
+                            Title = x.Title,
+                            Genres = x.Genres,
+                            PosterUrl = x.PosterUrl,
+                            VoteAverage = x.VoteAverage,
+                            Overview = x.Overview,
+                            ReleaseDate = x.ReleaseDate
+                        })
+                        .ToList();
+
+                    if (matchedMovies.Any())
+                        return Ok(matchedMovies);
+                }
+            }
 
             return Ok(response);
         }
@@ -144,7 +186,7 @@ namespace MovieRecommendation.API.Controllers
         /*Bu filmlerin türlerine göre content-based öneri üretir.
         Aynı zamanda MovieLens verisine göre collaborative öneri üretir.*/
         [HttpGet("hybrid/{userId}")]
-        public IActionResult GetHybridRecommendations(int userId)
+        public async Task<IActionResult> GetHybridRecommendations(int userId)
         {
             var likedRatings = _context.UserRatings
                 .Where(x => x.UserId == userId && x.Rating >= 4)
@@ -304,12 +346,10 @@ namespace MovieRecommendation.API.Controllers
 
                 if (mlResults.Any())
                 {
-                    Console.WriteLine($"ML sonuç sayısı: {mlResults.Count}");
                     var tmdbIds = mlResults
                         .Where(x => x.TmdbId.HasValue)
                         .Select(x => x.TmdbId!.Value.ToString())
                         .ToList();
-                    Console.WriteLine($"tmdbIds: {string.Join(",", tmdbIds.Take(3))}");
 
                     var matchedMovies = _context.Movies
                         .Where(x => x.TmdbId != null && tmdbIds.Contains(x.TmdbId))
@@ -324,7 +364,6 @@ namespace MovieRecommendation.API.Controllers
                             ReleaseDate = x.ReleaseDate
                         })
                         .ToList();
-                    Console.WriteLine($"Eşleşen film sayısı: {matchedMovies.Count}");
 
                     if (matchedMovies.Any())
                         return Ok(matchedMovies);

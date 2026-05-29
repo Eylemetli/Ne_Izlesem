@@ -144,9 +144,7 @@ class ApiService {
 
   Future<void> rateMovie(int movieId, double rating) async {
     final response = await http.post(
-      Uri.parse(
-        "$baseUrl/Rating?userId=$userId&movieId=$movieId&rating=$rating",
-      ),
+      Uri.parse("$baseUrl/Rating?movieId=$movieId&rating=$rating"),
       headers: {"Authorization": "Bearer $token"},
     );
 

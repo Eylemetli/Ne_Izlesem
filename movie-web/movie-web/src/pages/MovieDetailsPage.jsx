@@ -37,11 +37,7 @@ function MovieDetailsPage() {
     const submitRating = async () => {
 
         try {
-
-            await api.post(
-                `/Rating?userId=${localStorage.getItem("userId")}&movieId=${id}&rating=${Number(rating)}`
-            )
-
+            await api.post(`/Rating?movieId=${id}&rating=${Number(rating)}`)
             setMessage("Puan verildi.")
 
         } catch (error) {
@@ -128,8 +124,6 @@ function MovieDetailsPage() {
                 </div>
 
             </div>
-
-            <p>{movie.release_date}</p>
             <div
                 style={{
                     display: "flex",
