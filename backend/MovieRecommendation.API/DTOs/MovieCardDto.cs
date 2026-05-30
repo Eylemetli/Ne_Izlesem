@@ -15,5 +15,6 @@ namespace MovieRecommendation.API.DTOs
         public string? Overview { get; set; }
 
         public string? ReleaseDate { get; set; }
+        public string? TmdbId { get; set; }
     }
 }

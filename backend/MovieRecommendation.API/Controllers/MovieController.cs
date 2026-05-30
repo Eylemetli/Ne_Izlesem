@@ -83,30 +83,42 @@ namespace MovieRecommendation.API.Controllers
             return Ok(movie);
         }
         [HttpGet("{id}/details")]
-        public IActionResult GetMovieDetails(int id)
+        public async Task<IActionResult> GetMovieDetails(int id)
         {
-            var movie = _context.Movies
-                .AsNoTracking()
-                .Where(x => x.Id == id)
-                .Select(x => new
-                {
-                    x.Id,
-                    x.Title,
-                    x.Genres,
-                    x.PosterUrl,
-                    FullPosterUrl = x.PosterUrl,
-                    x.Overview,
-                    x.ReleaseDate,
-                    x.VoteAverage
-                })
-                .FirstOrDefault();
+            var movie = _context.Movies.FirstOrDefault(x => x.Id == id);
 
             if (movie == null)
-            {
                 return NotFound("Film bulunamadı.");
+
+            // Poster yoksa TMDB'den çek
+            if (movie.PosterUrl == null && movie.TmdbId != null)
+            {
+                try
+                {
+                    var details = await _tmdbService.GetMovieDetails(int.Parse(movie.TmdbId!));
+                    if (details != null)
+                    {
+                        movie.PosterUrl = details.FullPosterUrl;
+                        movie.Overview = details.Overview;
+                        movie.ReleaseDate = details.ReleaseDate;
+                        movie.VoteAverage = details.VoteAverage;
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                catch { }
             }
 
-            return Ok(movie);
+            return Ok(new
+            {
+                movie.Id,
+                movie.Title,
+                movie.Genres,
+                movie.PosterUrl,
+                FullPosterUrl = movie.PosterUrl,
+                movie.Overview,
+                movie.ReleaseDate,
+                movie.VoteAverage
+            });
         }
         [HttpGet("filter")]
         public IActionResult FilterMovies(string? genre, double? minRating)
@@ -173,6 +185,19 @@ namespace MovieRecommendation.API.Controllers
                 .ToList();
 
             return Ok(similarMovies);
+        }
+        [HttpGet("genres")]
+        public IActionResult GetGenres()
+        {
+            var genres = _context.Movies
+                .Where(x => x.Genres != null)
+                .AsEnumerable()
+                .SelectMany(x => x.Genres!.Split('|'))
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            return Ok(genres);
         }
     }
 }

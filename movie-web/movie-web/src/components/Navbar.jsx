@@ -26,6 +26,8 @@ function Navbar() {
 
                     <Link to="/profile">Profile</Link> |{" "}
 
+                    <Link to="/watchlist">Watchlist</Link> |{" "}
+
                     <button onClick={logout}>
                         Logout
                     </button>

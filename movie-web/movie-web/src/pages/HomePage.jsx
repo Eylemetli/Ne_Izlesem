@@ -4,31 +4,32 @@ import MovieCard from "../components/MovieCard"
 
 function HomePage() {
     const [movies, setMovies] = useState([])
+    const [discover, setDiscover] = useState([])
     const [genre, setGenre] = useState("")
     const [minRating, setMinRating] = useState("")
     const [searchText, setSearchText] = useState("")
     const [loading, setLoading] = useState(false)
 
     const fetchRecommendations = async () => {
-
         try {
-
             setLoading(true)
 
             const response = await api.get("/Recommendation/me")
 
-            setMovies(response.data)
+            if (response.data.recommendations) {
+                setMovies(response.data.recommendations)
+                setDiscover(response.data.discover || [])
+            } else {
+                setMovies(response.data)
+                setDiscover([])
+            }
 
         } catch (error) {
-
             console.log(error)
-
         } finally {
-
             setLoading(false)
         }
     }
-
     useEffect(() => {
         fetchRecommendations()
     }, [])
@@ -36,19 +37,17 @@ function HomePage() {
     const handleFilter = async () => {
         try {
             setLoading(true)
-            const response = await api.get("/Movie/filter", {
+            const response = await api.get("/Recommendation/me/filter", {
                 params: {
                     genre: genre,
                     minRating: minRating
                 }
             })
-
             setMovies(response.data)
-
+            setDiscover([])
         } catch (error) {
             console.log(error)
-        }
-        finally {
+        } finally {
             setLoading(false)
         }
     }
@@ -168,6 +167,26 @@ function HomePage() {
                     <MovieCard key={movie.id} movie={movie} />
                 ))}
             </div>
+            {discover.length > 0 && (
+                <>
+                    <h2 style={{ paddingLeft: "20px" }}>
+                        Bunları da İzleyebilirsiniz
+                    </h2>
+
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                            gap: "20px",
+                            padding: "20px"
+                        }}
+                    >
+                        {discover.map((movie) => (
+                            <MovieCard key={movie.id} movie={movie} />
+                        ))}
+                    </div>
+                </>
+            )}
         </div>
     )
 }

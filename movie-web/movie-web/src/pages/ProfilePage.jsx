@@ -10,73 +10,66 @@ function ProfilePage() {
         watchingPurpose: ""
     })
 
+    const [genres, setGenres] = useState([])
+    const [selectedGenres, setSelectedGenres] = useState([])
     const [message, setMessage] = useState("")
-    const [watchlist, setWatchlist] = useState([])
 
     useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const response = await api.get("/Profile/me")
-
-                setProfile({
-                    fullName: response.data.fullName || "",
-                    favoriteGenres: response.data.favoriteGenres || "",
-                    languagePreference: response.data.languagePreference || "",
-                    localOrForeign: response.data.localOrForeign || "",
-                    watchingPurpose: response.data.watchingPurpose || ""
-                })
-            } catch (error) {
-                console.log(error)
-            }
-        }
-        const fetchWatchlist = async () => {
-
-            try {
-
-                const response = await api.get(
-                    `/Watchlist/${localStorage.getItem("userId")}`
-                )
-
-                setWatchlist(response.data)
-
-            } catch (error) {
-
-                console.log(error)
-            }
-        }
-
         fetchProfile()
-        fetchWatchlist()
+        fetchGenres()
     }, [])
 
+    const fetchGenres = async () => {
+        try {
+            const response = await api.get("/Movie/genres")
+            setGenres(response.data)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    const fetchProfile = async () => {
+        try {
+            const response = await api.get("/Profile/me")
+            const data = response.data
+            setProfile({
+                fullName: data.fullName || "",
+                favoriteGenres: data.favoriteGenres || "",
+                languagePreference: data.languagePreference || "",
+                localOrForeign: data.localOrForeign || "",
+                watchingPurpose: data.watchingPurpose || ""
+            })
+            if (data.favoriteGenres) {
+                setSelectedGenres(data.favoriteGenres.split("|"))
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     const handleChange = (e) => {
-        setProfile({
-            ...profile,
-            [e.target.name]: e.target.value
-        })
+        setProfile({ ...profile, [e.target.name]: e.target.value })
+    }
+
+    const toggleGenre = (genre) => {
+        setSelectedGenres(prev =>
+            prev.includes(genre)
+                ? prev.filter(g => g !== genre)
+                : [...prev, genre]
+        )
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-
         try {
-            await api.put("/Profile/me", profile)
-
+            await api.put("/Profile/me", {
+                ...profile,
+                favoriteGenres: selectedGenres.join("|")
+            })
             setMessage("Profil güncellendi.")
         } catch (error) {
             console.log(error)
             setMessage("Profil güncellenemedi.")
-        }
-    }
-    const removeFromWatchlist = async (movieId) => {
-        try {
-            await api.delete(
-                `/Watchlist?userId=${localStorage.getItem("userId")}&movieId=${movieId}`
-            )
-
-            setWatchlist(watchlist.filter((movie) => movie.id !== movieId))
-        } catch (error) {
-            console.log(error)
         }
     }
 
@@ -98,77 +91,66 @@ function ProfilePage() {
 
                     <div className="form-group">
                         <label>Favori Türler</label>
-                        <input
-                            name="favoriteGenres"
-                            placeholder="Örn: Comedy|Action|Drama"
-                            value={profile.favoriteGenres}
-                            onChange={handleChange}
-                        />
-                        <small>Türleri | işaretiyle ayır. Örn: Comedy|Action</small>
+                        <div style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                            marginTop: "8px"
+                        }}>
+                            {genres.map(g => (
+                                <button
+                                    key={g}
+                                    type="button"
+                                    onClick={() => toggleGenre(g)}
+                                    style={{
+                                        padding: "6px 12px",
+                                        borderRadius: "20px",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        backgroundColor: selectedGenres.includes(g) ? "#e50914" : "#333",
+                                        color: "white",
+                                        fontWeight: selectedGenres.includes(g) ? "bold" : "normal"
+                                    }}
+                                >
+                                    {g}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="form-group">
                         <label>Dil Tercihi</label>
-                        <input
-                            name="languagePreference"
-                            placeholder="Örn: English, Turkish"
-                            value={profile.languagePreference}
-                            onChange={handleChange}
-                        />
+                        <select name="languagePreference" value={profile.languagePreference} onChange={handleChange}>
+                            <option value="">Seçin</option>
+                            <option value="English">English</option>
+                            <option value="Turkish">Turkish</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
 
                     <div className="form-group">
                         <label>Yerli / Yabancı Tercihi</label>
-                        <input
-                            name="localOrForeign"
-                            placeholder="Örn: Foreign veya Local"
-                            value={profile.localOrForeign}
-                            onChange={handleChange}
-                        />
+                        <select name="localOrForeign" value={profile.localOrForeign} onChange={handleChange}>
+                            <option value="">Seçin</option>
+                            <option value="Local">Local</option>
+                            <option value="Foreign">Foreign</option>
+                            <option value="Both">Both</option>
+                        </select>
                     </div>
 
                     <div className="form-group">
                         <label>İzleme Amacı</label>
-                        <input
-                            name="watchingPurpose"
-                            placeholder="Örn: Entertainment, Learning"
-                            value={profile.watchingPurpose}
-                            onChange={handleChange}
-                        />
+                        <select name="watchingPurpose" value={profile.watchingPurpose} onChange={handleChange}>
+                            <option value="">Seçin</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Learning">Learning</option>
+                            <option value="Relaxation">Relaxation</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
 
                     <button type="submit">Profili Güncelle</button>
                 </form>
-                <h2>Watchlist</h2>
-
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                        gap: "20px"
-                    }}
-                >
-                    {watchlist.map((movie) => (
-
-                        <div key={movie.id}>
-
-                            <img
-                                src={movie.posterUrl}
-                                alt={movie.title}
-                                style={{
-                                    width: "100%",
-                                    borderRadius: "10px"
-                                }}
-                            />
-
-                            <h3>{movie.title}</h3>
-                            <button onClick={() => removeFromWatchlist(movie.id)}>
-                                Kaldır
-                            </button>
-
-                        </div>
-                    ))}
-                </div>
 
                 <p>{message}</p>
             </div>

@@ -15,6 +15,8 @@ class _HomePageState extends State<HomePage> {
   final ApiService apiService = ApiService();
 
   List movies = [];
+  List discoverMovies = [];
+  List<String> genreList = [];
 
   String searchText = "";
   String selectedGenre = "";
@@ -27,6 +29,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     fetchMovies();
+    fetchGenres();
   }
 
   Future<void> fetchMovies() async {
@@ -34,12 +37,26 @@ class _HomePageState extends State<HomePage> {
       final data = await apiService.getRecommendations();
 
       setState(() {
-        movies = data;
+        // ML yeni format
+        if (data is Map) {
+          movies = (data["recommendations"] as List?) ?? [];
+          discoverMovies = (data["discover"] as List?) ?? [];
+        } else {
+          movies = data;
+          discoverMovies = [];
+        }
         isLoading = false;
       });
     } catch (e) {
       print(e);
     }
+  }
+
+  Future<void> fetchGenres() async {
+    final data = await apiService.getGenres();
+    setState(() {
+      genreList = data;
+    });
   }
 
   Future<void> searchMovies() async {
@@ -54,6 +71,7 @@ class _HomePageState extends State<HomePage> {
     final data = await apiService.filterMovies(selectedGenre, selectedRating);
     setState(() {
       movies = data;
+      discoverMovies = [];
     });
   }
 
@@ -96,20 +114,14 @@ class _HomePageState extends State<HomePage> {
                         child: DropdownButtonFormField<String>(
                           value: selectedGenre.isEmpty ? null : selectedGenre,
                           decoration: const InputDecoration(labelText: "Tür"),
-                          items: const [
-                            DropdownMenuItem(
-                              value: "Action",
-                              child: Text("Action"),
-                            ),
-                            DropdownMenuItem(
-                              value: "Comedy",
-                              child: Text("Comedy"),
-                            ),
-                            DropdownMenuItem(
-                              value: "Drama",
-                              child: Text("Drama"),
-                            ),
-                          ],
+                          items: genreList
+                              .map(
+                                (genre) => DropdownMenuItem(
+                                  value: genre,
+                                  child: Text(genre),
+                                ),
+                              )
+                              .toList(),
                           onChanged: (value) {
                             selectedGenre = value ?? "";
                           },
@@ -171,20 +183,57 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 10),
 
                   Expanded(
-                    child: GridView.builder(
-                      itemCount: movies.length,
-                      padding: const EdgeInsets.only(top: 4),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2, // 3 → 2: daha okunaklı
-                            childAspectRatio: 0.62, // poster oranına uygun
-                            crossAxisSpacing: 4,
-                            mainAxisSpacing: 4,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: movies.length,
+                            padding: const EdgeInsets.only(top: 4),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  childAspectRatio: 0.62,
+                                  crossAxisSpacing: 4,
+                                  mainAxisSpacing: 4,
+                                ),
+                            itemBuilder: (context, index) {
+                              return MovieCard(movie: movies[index]);
+                            },
                           ),
-                      itemBuilder: (context, index) {
-                        final movie = movies[index];
-                        return MovieCard(movie: movie);
-                      },
+
+                          if (discoverMovies.isNotEmpty) ...[
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                "Bunları da İzleyebilirsiniz",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: discoverMovies.length,
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.62,
+                                    crossAxisSpacing: 4,
+                                    mainAxisSpacing: 4,
+                                  ),
+                              itemBuilder: (context, index) {
+                                return MovieCard(movie: discoverMovies[index]);
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

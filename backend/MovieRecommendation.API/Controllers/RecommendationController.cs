@@ -118,7 +118,16 @@ namespace MovieRecommendation.API.Controllers
                         .ToList();
 
                     if (matchedMovies.Any())
-                        return Ok(matchedMovies);
+                    {
+                        var main = matchedMovies.Take(10).ToList();
+                        var discover = matchedMovies.Skip(10).Take(10).ToList();
+
+                        return Ok(new
+                        {
+                            recommendations = main,
+                            discover = discover
+                        });
+                    }
                 }
             }
 
@@ -299,31 +308,77 @@ namespace MovieRecommendation.API.Controllers
                 var profile = _context.UserProfiles
                     .FirstOrDefault(x => x.UserId == userId);
 
-                if (profile != null &&
-                    !string.IsNullOrEmpty(profile.FavoriteGenres))
+                if (profile != null && !string.IsNullOrEmpty(profile.FavoriteGenres))
                 {
-                    var favoriteGenres = profile.FavoriteGenres
-                        .Split('|')
-                        .ToList();
+                    var favoriteGenres = profile.FavoriteGenres.Split('|').ToList();
 
+                    // Profil türlerine göre DB'den popüler filmler
                     var genreRecommendations = _context.Movies
                         .AsEnumerable()
                         .Where(x => !string.IsNullOrEmpty(x.Genres) &&
-                                    x.Genres.Split('|')
-                                    .Any(g => favoriteGenres.Contains(g)))
-                        .Take(10)
+                                    x.Genres.Split('|').Any(g => favoriteGenres.Contains(g)))
+                        .OrderByDescending(x => x.VoteAverage ?? 0)
+                        .Take(20)
                         .ToList();
 
-                    return Ok(genreRecommendations);
+                    var main = genreRecommendations.Take(10)
+                        .Select(x => new MovieCardDto
+                        {
+                            Id = x.Id,
+                            Title = x.Title,
+                            Genres = x.Genres,
+                            PosterUrl = x.PosterUrl,
+                            VoteAverage = x.VoteAverage,
+                            Overview = x.Overview,
+                            ReleaseDate = x.ReleaseDate
+                        }).ToList();
+
+                    var discover = genreRecommendations.Skip(10).Take(10)
+                        .Select(x => new MovieCardDto
+                        {
+                            Id = x.Id,
+                            Title = x.Title,
+                            Genres = x.Genres,
+                            PosterUrl = x.PosterUrl,
+                            VoteAverage = x.VoteAverage,
+                            Overview = x.Overview,
+                            ReleaseDate = x.ReleaseDate
+                        }).ToList();
+
+                    return Ok(new { recommendations = main, discover = discover });
                 }
 
+                // Profil de yoksa popüler filmler
                 var popularMovies = _context.Movies
+                    .Where(x => x.PosterUrl != null)
                     .OrderByDescending(x => x.AverageRating ?? 0)
                     .ThenByDescending(x => x.RatingCount)
-                    .Take(10)
+                    .Take(20)
                     .ToList();
 
-                return Ok(popularMovies);
+                return Ok(new
+                {
+                    recommendations = popularMovies.Take(10).Select(x => new MovieCardDto
+                    {
+                        Id = x.Id,
+                        Title = x.Title,
+                        Genres = x.Genres,
+                        PosterUrl = x.PosterUrl,
+                        VoteAverage = x.VoteAverage,
+                        Overview = x.Overview,
+                        ReleaseDate = x.ReleaseDate
+                    }).ToList(),
+                    discover = popularMovies.Skip(10).Take(10).Select(x => new MovieCardDto
+                    {
+                        Id = x.Id,
+                        Title = x.Title,
+                        Genres = x.Genres,
+                        PosterUrl = x.PosterUrl,
+                        VoteAverage = x.VoteAverage,
+                        Overview = x.Overview,
+                        ReleaseDate = x.ReleaseDate
+                    }).ToList()
+                });
             }
             // ML servisine kullanıcının puanlarını gönder
             // ML servisine kullanıcının puanlarını gönder
@@ -342,7 +397,7 @@ namespace MovieRecommendation.API.Controllers
 
             if (mlRatings.Any())
             {
-                var mlResults = await _mlService.GetRecommendationsByRatings(mlRatings);
+                var mlResults = await _mlService.GetRecommendationsByRatings(mlRatings, 50);
 
                 if (mlResults.Any())
                 {
@@ -350,6 +405,7 @@ namespace MovieRecommendation.API.Controllers
                         .Where(x => x.TmdbId.HasValue)
                         .Select(x => x.TmdbId!.Value.ToString())
                         .ToList();
+                    Console.WriteLine($"tmdbIds içinde 603 var mı: {tmdbIds.Contains("603")}");
 
                     var matchedMovies = _context.Movies
                         .Where(x => x.TmdbId != null && tmdbIds.Contains(x.TmdbId))
@@ -361,12 +417,32 @@ namespace MovieRecommendation.API.Controllers
                             PosterUrl = x.PosterUrl,
                             VoteAverage = x.VoteAverage,
                             Overview = x.Overview,
-                            ReleaseDate = x.ReleaseDate
+                            ReleaseDate = x.ReleaseDate,
+                            TmdbId = x.TmdbId
                         })
                         .ToList();
+                    // ML skoruna göre sırala
+                    var tmdbScoreMap = mlResults
+                        .Where(x => x.TmdbId.HasValue)
+                        .ToDictionary(x => x.TmdbId!.Value.ToString(), x => x.Score);
+
+                    matchedMovies = matchedMovies
+                        .OrderByDescending(x => tmdbScoreMap.GetValueOrDefault(x.TmdbId ?? "", 0))
+                        .ToList();
+                    Console.WriteLine($"matchedMovies sayısı: {matchedMovies.Count}");
+                    Console.WriteLine($"Matrix matched: {matchedMovies.Any(x => x.Title.Contains("Matrix"))}");
 
                     if (matchedMovies.Any())
-                        return Ok(matchedMovies);
+                    {
+                        var main = matchedMovies.Take(10).ToList();
+                        var discover = matchedMovies.Skip(10).Take(10).ToList();
+
+                        return Ok(new
+                        {
+                            recommendations = main,
+                            discover = discover
+                        });
+                    }
                 }
             }
             // ML sonuç vermediyse mevcut mantık devam eder...
@@ -405,6 +481,104 @@ namespace MovieRecommendation.API.Controllers
            .ToList();
 
             return Ok(response);
+        }
+
+        [Authorize]
+        [HttpGet("me/filter")]
+        public async Task<IActionResult> GetFilteredRecommendations(string? genre, double? minRating)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+
+            int userId = int.Parse(userIdClaim.Value);
+
+            var mlRatings = _context.UserRatings
+                .Where(x => x.UserId == userId)
+                .Join(_context.Movies,
+                      ur => ur.MovieId,
+                      m => m.Id,
+                      (ur, m) => new MlRatingInput
+                      {
+                          MovieLensId = m.MovieLensId,
+                          Rating = ur.Rating
+                      })
+                .Where(x => x.MovieLensId > 0)
+                .ToList();
+
+            if (mlRatings.Any())
+            {
+                var mlResults = await _mlService.GetRecommendationsByRatings(mlRatings, 50);
+
+                if (mlResults.Any())
+                {
+                    var tmdbIds = mlResults
+                        .Where(x => x.TmdbId.HasValue)
+                        .Select(x => x.TmdbId!.Value.ToString())
+                        .ToList();
+
+                    var query = _context.Movies
+                        .Where(x => x.TmdbId != null && tmdbIds.Contains(x.TmdbId));
+
+                    if (!string.IsNullOrEmpty(genre))
+                        query = query.Where(x => x.Genres != null && x.Genres.Contains(genre));
+
+                    if (minRating.HasValue)
+                        query = query.Where(x => x.VoteAverage >= minRating.Value);
+
+                    var matchedMovies = query
+                        .Select(x => new MovieCardDto
+                        {
+                            Id = x.Id,
+                            Title = x.Title,
+                            Genres = x.Genres,
+                            PosterUrl = x.PosterUrl,
+                            VoteAverage = x.VoteAverage,
+                            Overview = x.Overview,
+                            ReleaseDate = x.ReleaseDate,
+                            TmdbId = x.TmdbId
+                        })
+                        .ToList();
+
+                    var tmdbScoreMap = mlResults
+                        .Where(x => x.TmdbId.HasValue)
+                        .ToDictionary(x => x.TmdbId!.Value.ToString(), x => x.Score);
+
+                    matchedMovies = matchedMovies
+                        .OrderByDescending(x => tmdbScoreMap.GetValueOrDefault(x.TmdbId ?? "", 0))
+                        .ToList();
+
+                    if (matchedMovies.Any())
+                        return Ok(matchedMovies);
+                }
+            }
+
+            // Fallback — ML sonuç vermezse DB filtresi
+            var fallback = _context.Movies
+                .Where(x => x.PosterUrl != null)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(genre))
+                fallback = fallback.Where(x => x.Genres != null && x.Genres.Contains(genre));
+
+            if (minRating.HasValue)
+                fallback = fallback.Where(x => x.VoteAverage >= minRating.Value);
+
+            var result = fallback
+                .OrderByDescending(x => x.VoteAverage)
+                .Take(20)
+                .Select(x => new MovieCardDto
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Genres = x.Genres,
+                    PosterUrl = x.PosterUrl,
+                    VoteAverage = x.VoteAverage,
+                    Overview = x.Overview,
+                    ReleaseDate = x.ReleaseDate
+                })
+                .ToList();
+
+            return Ok(result);
         }
     }
 }

@@ -7,6 +7,7 @@ import ProfilePage from "./pages/ProfilePage"
 import Navbar from "./components/Navbar"
 import MovieDetailsPage from "./pages/MovieDetailsPage"
 import ProtectedRoute from "./components/ProtectedRoute"
+import WatchlistPage from "./pages/WatchlistPage"
 
 function App() {
   return (
@@ -38,6 +39,15 @@ function App() {
           element={
             <ProtectedRoute>
               <MovieDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/watchlist"
+          element={
+            <ProtectedRoute>
+              <WatchlistPage />
             </ProtectedRoute>
           }
         />

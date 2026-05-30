@@ -12,10 +12,12 @@ class _ProfilePageState extends State<ProfilePage> {
   final ApiService apiService = ApiService();
 
   final fullNameController = TextEditingController();
-  final favoriteGenresController = TextEditingController();
-  final languagePreferenceController = TextEditingController();
-  final localOrForeignController = TextEditingController();
-  final watchingPurposeController = TextEditingController();
+
+  String languagePreference = "";
+  String localOrForeign = "";
+  String watchingPurpose = "";
+  List<String> selectedGenres = [];
+  List<String> genreList = [];
 
   String message = "";
   bool isLoading = true;
@@ -23,7 +25,15 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    fetchGenres();
     fetchProfile();
+  }
+
+  Future<void> fetchGenres() async {
+    final data = await apiService.getGenres();
+    setState(() {
+      genreList = data;
+    });
   }
 
   Future<void> fetchProfile() async {
@@ -31,10 +41,13 @@ class _ProfilePageState extends State<ProfilePage> {
       final data = await apiService.getProfile();
 
       fullNameController.text = data["fullName"] ?? "";
-      favoriteGenresController.text = data["favoriteGenres"] ?? "";
-      languagePreferenceController.text = data["languagePreference"] ?? "";
-      localOrForeignController.text = data["localOrForeign"] ?? "";
-      watchingPurposeController.text = data["watchingPurpose"] ?? "";
+      languagePreference = data["languagePreference"] ?? "";
+      localOrForeign = data["localOrForeign"] ?? "";
+      watchingPurpose = data["watchingPurpose"] ?? "";
+
+      if (data["favoriteGenres"] != null && data["favoriteGenres"] != "") {
+        selectedGenres = (data["favoriteGenres"] as String).split("|");
+      }
 
       setState(() {
         isLoading = false;
@@ -51,10 +64,10 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       await apiService.updateProfile(
         fullName: fullNameController.text,
-        favoriteGenres: favoriteGenresController.text,
-        languagePreference: languagePreferenceController.text,
-        localOrForeign: localOrForeignController.text,
-        watchingPurpose: watchingPurposeController.text,
+        favoriteGenres: selectedGenres.join("|"),
+        languagePreference: languagePreference,
+        localOrForeign: localOrForeign,
+        watchingPurpose: watchingPurpose,
       );
 
       setState(() {
@@ -67,6 +80,35 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  void toggleGenre(String genre) {
+    setState(() {
+      if (selectedGenres.contains(genre)) {
+        selectedGenres.remove(genre);
+      } else {
+        selectedGenres.add(genre);
+      }
+    });
+  }
+
+  Widget buildDropdown(
+    String label,
+    String value,
+    List<String> options,
+    Function(String?) onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<String>(
+        value: value.isEmpty ? null : value,
+        decoration: InputDecoration(labelText: label),
+        items: options
+            .map((o) => DropdownMenuItem(value: o, child: Text(o)))
+            .toList(),
+        onChanged: onChanged,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,46 +118,82 @@ class _ProfilePageState extends State<ProfilePage> {
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextField(
                     controller: fullNameController,
                     decoration: const InputDecoration(labelText: "Ad Soyad"),
                   ),
-                  TextField(
-                    controller: favoriteGenresController,
-                    decoration: const InputDecoration(
-                      labelText: "Favori Türler",
-                      hintText: "Comedy|Action|Drama",
-                    ),
+
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Favori Türler",
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  TextField(
-                    controller: languagePreferenceController,
-                    decoration: const InputDecoration(labelText: "Dil Tercihi"),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: genreList.map((genre) {
+                      final isSelected = selectedGenres.contains(genre);
+                      return GestureDetector(
+                        onTap: () => toggleGenre(genre),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.red : Colors.grey[800],
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            genre,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
-                  TextField(
-                    controller: localOrForeignController,
-                    decoration: const InputDecoration(
-                      labelText: "Yerli / Yabancı",
-                    ),
+
+                  const SizedBox(height: 8),
+
+                  buildDropdown(
+                    "Dil Tercihi",
+                    languagePreference,
+                    ["English", "Turkish", "Other"],
+                    (val) => setState(() => languagePreference = val ?? ""),
                   ),
-                  TextField(
-                    controller: watchingPurposeController,
-                    decoration: const InputDecoration(
-                      labelText: "İzleme Amacı",
-                    ),
+
+                  buildDropdown(
+                    "Yerli / Yabancı",
+                    localOrForeign,
+                    ["Local", "Foreign", "Both"],
+                    (val) => setState(() => localOrForeign = val ?? ""),
                   ),
+
+                  buildDropdown(
+                    "İzleme Amacı",
+                    watchingPurpose,
+                    ["Entertainment", "Learning", "Relaxation", "Other"],
+                    (val) => setState(() => watchingPurpose = val ?? ""),
+                  ),
+
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: updateProfile,
                     child: const Text("Profili Güncelle"),
                   ),
                   const SizedBox(height: 20),
-
                   ElevatedButton(
                     onPressed: () {
                       ApiService.token = null;
                       ApiService.userId = null;
-
                       Navigator.pushNamedAndRemoveUntil(
                         context,
                         '/',

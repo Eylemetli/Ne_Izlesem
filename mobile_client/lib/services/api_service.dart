@@ -14,7 +14,7 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> getRecommendations() async {
+  Future<dynamic> getRecommendations() async {
     final response = await http.get(
       Uri.parse("$baseUrl/Recommendation/me"),
       headers: {"Authorization": "Bearer $token"},
@@ -131,8 +131,17 @@ class ApiService {
   }
 
   Future<List<dynamic>> filterMovies(String genre, String minRating) async {
+    final params = <String, String>{};
+    if (genre.isNotEmpty) params['genre'] = genre;
+    if (minRating.isNotEmpty) params['minRating'] = minRating;
+
+    final uri = Uri.parse(
+      "$baseUrl/Recommendation/me/filter",
+    ).replace(queryParameters: params);
+
     final response = await http.get(
-      Uri.parse("$baseUrl/Movie/filter?genre=$genre&minRating=$minRating"),
+      uri,
+      headers: {"Authorization": "Bearer $token"},
     );
 
     if (response.statusCode == 200) {
@@ -170,6 +179,20 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception("Kayıt başarısız");
+    }
+  }
+
+  Future<List<String>> getGenres() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/Movie/genres"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((e) => e.toString()).toList();
+    } else {
+      return [];
     }
   }
 }
